@@ -1,0 +1,43 @@
+### 1. Criar um profissional (barbeiro)
+POST http://localhost:8080/profissionais
+Content-Type: application/json
+
+{
+  "nome": "Carlos",
+  "especialidade": "corte e barba"
+}
+
+### 2. Criar um cliente
+POST http://localhost:8080/clientes
+Content-Type: application/json
+
+{
+  "nome": "João",
+  "telefone": "11999998888",
+  "email": "joao@email.com"
+}
+
+### 3. Criar um agendamento (deve funcionar)
+POST http://localhost:8080/agendamentos
+Content-Type: application/json
+
+{
+  "dataHora": "2026-08-25T14:00:00",
+  "status": "AGENDADO",
+  "cliente": { "id": 1 },
+  "profissional": { "id": 1 }
+}
+
+### 4. Tentar o MESMO horário/profissional (a regra deve BARRAR)
+POST http://localhost:8080/agendamentos
+Content-Type: application/json
+
+{
+  "dataHora": "2026-08-25T14:00:00",
+  "status": "AGENDADO",
+  "cliente": { "id": 1 },
+  "profissional": { "id": 1 }
+}
+
+### 5. Listar todos os agendamentos
+GET http://localhost:8080/agendamentos
