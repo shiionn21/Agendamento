@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💈 Barbearia — Painel de Agendamentos</title>
+  <style>
+    :root {
+      --bg: #0f1420;
+      --card: #1a2130;
+      --accent: #d4a24e;
+      --text: #e8ecf3;
+      --muted: #97a0b0;
+      --danger: #e5534b;
+      --ok: #3fb950;
+      --border: #2a3346;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      text-align: center;
+      padding: 28px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0; font-size: 1.7rem; }
+    header p { margin: 6px 0 0; color: var(--muted); }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card h2 { margin: 0 0 14px; font-size: 1.1rem; color: var(--accent); }
+    .full { grid-column: 1 / -1; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin: 10px 0 4px; }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      background: #0f1524;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    button {
+      margin-top: 14px;
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #1a1300;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    .msg { margin-top: 12px; font-size: 0.88rem; min-height: 1.2em; }
+    .msg.ok { color: var(--ok); }
+    .msg.err { color: var(--danger); }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    th { color: var(--muted); font-weight: 600; }
+    .empty { color: var(--muted); font-style: italic; padding: 12px 0; }
+    .badge {
+      background: rgba(212,162,78,0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+    @media (max-width: 720px) { .container { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💈 Barbearia — Painel</h1>
+    <p>Sistema de agendamentos</p>
+  </header>
+
+  <div class="container">
+
+    <!-- Cadastrar profissional -->
+    <section class="card">
+      <h2>Novo profissional</h2>
+      <form id="form-profissional">
+        <label>Nome</label>
+        <input name="nome" required />
+        <label>Especialidade</label>
+        <input name="especialidade" placeholder="corte, barba..." required />
+        <button type="submit">Cadastrar profissional</button>
+      </form>
+      <div class="msg" id="msg-profissional"></div>
+    </section>
+
+    <!-- Cadastrar cliente -->
+    <section class="card">
+      <h2>Novo cliente</h2>
+      <form id="form-cliente">
+        <label>Nome</label>
+        <input name="nome" required />
+        <label>Telefone</label>
+        <input name="telefone" />
+        <label>E-mail</label>
+        <input name="email" type="email" />
+        <button type="submit">Cadastrar cliente</button>
+      </form>
+      <div class="msg" id="msg-cliente"></div>
+    </section>
+
+    <!-- Novo agendamento -->
+    <section class="card full">
+      <h2>Novo agendamento</h2>
+      <form id="form-agendamento">
+        <label>Cliente</label>
+        <select name="cliente" id="select-cliente" required></select>
+        <label>Profissional</label>
+        <select name="profissional" id="select-profissional" required></select>
+        <label>Data e hora</label>
+        <input name="dataHora" type="datetime-local" required />
+        <button type="submit">Agendar</button>
+      </form>
+      <div class="msg" id="msg-agendamento"></div>
+    </section>
+
+    <!-- Lista de agendamentos -->
+    <section class="card full">
+      <h2>Agendamentos</h2>
+      <table>
+        <thead>
+          <tr><th>Cliente</th><th>Profissional</th><th>Data e hora</th><th>Status</th></tr>
+        </thead>
+        <tbody id="lista-agendamentos"></tbody>
+      </table>
+      <div class="empty" id="lista-vazia" style="display:none;">Nenhum agendamento ainda.</div>
+    </section>
+
+  </div>
+
+  <script>
+    // A API está no mesmo endereço da página, então usamos caminhos relativos.
+    const API = "";
+
+    // ---- Helpers ----
+    async function pegar(rota) {
+      const r = await fetch(API + rota);
+      return r.json();
+    }
+
+    async function enviar(rota, dados) {
+      const r = await fetch(API + rota, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+      });
+      const corpo = await r.json().catch(() => ({}));
+      return { ok: r.ok, status: r.status, corpo };
+    }
+
+    function mostrarMsg(id, texto, tipo) {
+      const el = document.getElementById(id);
+      el.textContent = texto;
+      el.className = "msg " + tipo;
+    }
+
+    function formatarData(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    // ---- Carregar dados na tela ----
+    async function carregarAgendamentos() {
+      const lista = await pegar("/agendamentos");
+      const tbody = document.getElementById("lista-agendamentos");
+      const vazio = document.getElementById("lista-vazia");
+      tbody.innerHTML = "";
+      if (!lista.length) {
+        vazio.style.display = "block";
+        return;
+      }
+      vazio.style.display = "none";
+      for (const a of lista) {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (a.cliente?.nome ?? "-") + "</td>" +
+          "<td>" + (a.profissional?.nome ?? "-") + "</td>" +
+          "<td>" + formatarData(a.dataHora) + "</td>" +
+          "<td><span class='badge'>" + a.status + "</span></td>";
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function carregarSelects() {
+      const clientes = await pegar("/clientes");
+      const profissionais = await pegar("/profissionais");
+      const selC = document.getElementById("select-cliente");
+      const selP = document.getElementById("select-profissional");
+      selC.innerHTML = clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join("");
+      selP.innerHTML = profissionais.map(p => `<option value="${p.id}">${p.nome} (${p.especialidade})</option>`).join("");
+    }
+
+    function atualizarTudo() {
+      carregarAgendamentos();
+      carregarSelects();
+    }
+
+    // ---- Formulários ----
+    document.getElementById("form-profissional").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const res = await enviar("/profissionais", {
+        nome: f.nome.value,
+        especialidade: f.especialidade.value,
+      });
+      if (res.ok) {
+        mostrarMsg("msg-profissional", "Profissional cadastrado!", "ok");
+        f.reset();
+        atualizarTudo();
+      } else {
+        mostrarMsg("msg-profissional", "Erro ao cadastrar.", "err");
+      }
+    });
+
+    document.getElementById("form-cliente").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const res = await enviar("/clientes", {
+        nome: f.nome.value,
+        telefone: f.telefone.value,
+        email: f.email.value,
+      });
+      if (res.ok) {
+        mostrarMsg("msg-cliente", "Cliente cadastrado!", "ok");
+        f.reset();
+        atualizarTudo();
+      } else {
+        mostrarMsg("msg-cliente", "Erro ao cadastrar.", "err");
+      }
+    });
+
+    document.getElementById("form-agendamento").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const res = await enviar("/agendamentos", {
+        dataHora: f.dataHora.value,
+        status: "AGENDADO",
+        cliente: { id: Number(f.cliente.value) },
+        profissional: { id: Number(f.profissional.value) },
+      });
+      if (res.ok) {
+        mostrarMsg("msg-agendamento", "Agendamento criado!", "ok");
+        f.reset();
+        carregarAgendamentos();
+      } else {
+        // A API devolve a mensagem da regra no campo "detail"
+        const motivo = res.corpo.detail || "Não foi possível agendar.";
+        mostrarMsg("msg-agendamento", motivo, "err");
+      }
+    });
+
+    // ---- Início ----
+    atualizarTudo();
+  </script>
+</body>
+</html>
