@@ -1,0 +1,43 @@
+### 1. Criar um profissional
+POST https://agendamento-m283.onrender.com/profissionais
+Content-Type: application/json
+
+{
+  "nome": "Carlos",
+  "especialidade": "corte e barba"
+}
+
+### 2. Criar um cliente
+POST https://agendamento-m283.onrender.com/clientes
+Content-Type: application/json
+
+{
+  "nome": "João",
+  "telefone": "11999998888",
+  "email": "joao@email.com"
+}
+
+### 3. Criar um agendamento (deve funcionar)
+POST https://agendamento-m283.onrender.com/agendamentos
+Content-Type: application/json
+
+{
+  "dataHora": "2026-08-25T14:00:00",
+  "status": "AGENDADO",
+  "cliente": { "id": 1 },
+  "profissional": { "id": 1 }
+}
+
+### 4. Mesmo horário/profissional (a regra deve BARRAR)
+POST https://agendamento-m283.onrender.com/agendamentos
+Content-Type: application/json
+
+{
+  "dataHora": "2026-08-25T14:00:00",
+  "status": "AGENDADO",
+  "cliente": { "id": 1 },
+  "profissional": { "id": 1 }
+}
+
+### 5. Listar todos
+GET https://agendamento-m283.onrender.com/agendamentos
