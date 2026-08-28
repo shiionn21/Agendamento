@@ -1,11 +1,13 @@
 # 💈 API de Agendamento para Barbearia
+Aplicação full-stack para gerenciamento de uma barbearia: interface web + API REST + banco de dados, com a regra de negócio que **impede dois agendamentos no mesmo horário para o mesmo profissional**.
+
 ## 🔗 Demo ao vivo
 
-API publicada no Render: **https://agendamento-m283.onrender.com**
+**App no ar:** https://agendamento-m283.onrender.com
 
-Teste rápido (lista de agendamentos): [`/agendamentos`](https://agendamento-m283.onrender.com/agendamentos)
+Abra o link e use a barbearia direto na tela: cadastre clientes e profissionais, marque agendamentos e veja a regra de horário ocupado funcionando na interface.
 
-> ⏳ O primeiro acesso pode levar ~40s — no plano gratuito o servidor "dorme" quando fica parado e precisa acordar.
+> ⏳ O primeiro acesso pode levar ~40s — no plano gratuito o servidor "dorme" quando fica parado.
 
 API REST para gerenciamento de agendamentos de uma barbearia, com regra de negócio que **impede o agendamento de dois horários iguais para o mesmo profissional**. Projeto desenvolvido para portfólio, com foco em boas práticas de arquitetura, modelagem de banco relacional e testes automatizados.
 
@@ -34,6 +36,7 @@ A arquitetura segue a separação clássica em camadas:
 - **Bean Validation** — validação de dados
 - **JUnit 5** — testes automatizados
 - **Maven** — build e gerenciamento de dependências
+- - **Frontend:** HTML, CSS e JavaScript (sem framework)
 
 ---
 
